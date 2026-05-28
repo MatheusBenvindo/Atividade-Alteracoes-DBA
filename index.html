@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caderno de Exercícios SQL: Refatoração com ALTER TABLE</title>
+    <style>
+        :root {
+            --senai-blue: #0054A6;
+            --senai-red: #ED1C24;
+            --senai-dark: #1E293B;
+            --senai-light: #F8FAFC;
+            --senai-gray: #64748B;
+            --senai-border: #E2E8F0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--senai-light);
+            color: var(--senai-dark);
+            line-height: 1.6;
+            padding-bottom: 60px;
+        }
+
+        header {
+            background-color: var(--senai-blue);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 5px solid var(--senai-red);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .alert-box {
+            background-color: #FEF2F2;
+            border-left: 5px solid var(--senai-red);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+            color: #991B1B;
+            font-size: 1.05rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .alert-box strong {
+            color: var(--senai-red);
+            display: block;
+            font-size: 1.15rem;
+            margin-bottom: 5px;
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            color: var(--senai-blue);
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--senai-border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--senai-border);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: #F1F5F9;
+            padding: 15px 20px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--senai-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge {
+            background-color: var(--senai-blue);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .badge-red {
+            background-color: var(--senai-red);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .context-box {
+            background-color: #EFF6FF;
+            border-left: 4px solid var(--senai-blue);
+            padding: 15px;
+            border-radius: 0 4px 4px 0;
+            font-size: 1rem;
+        }
+
+        .context-box strong {
+            color: var(--senai-blue);
+            display: block;
+            margin-bottom: 4px;
+            margin-top: 10px;
+        }
+        
+        .context-box strong:first-child {
+            margin-top: 0;
+        }
+        
+        .code-snippet {
+            background-color: #1E293B;
+            color: #E2E8F0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--senai-border);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--senai-gray);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 4px;
+        }
+
+        .tab-btn.active {
+            background-color: var(--senai-blue);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--senai-gray);
+            font-size: 0.95rem;
+            border-top: 1px solid var(--senai-border);
+            background: white;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Caderno de Exercícios: SQL</h1>
+        <p>Evoluindo o Schema com Segurança usando ALTER TABLE</p>
+    </header>
+
+    <div class="container">
+        
+        <div class="alert-box">
+            <strong>⚠️ Atenção: Formato de Entrega</strong>
+            A entrega desta atividade deverá ser feita exclusivamente através de um arquivo <strong>.sql</strong> contendo todos os scripts de resolução numerados. Faça mudanças pequenas e testáveis (uma por vez) e sempre valide com dados reais ou de teste.
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('parte1')">Parte 1: Modificação de Colunas</button>
+            <button class="tab-btn" onclick="switchTab('parte2')">Parte 2: Modificação de Constraints</button>
+        </div>
+
+        <div id="parte1" class="tab-content active">
+            <h2 class="section-title">Parte 1: Ajustando a Estrutura Interna das Tabelas</h2>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span>1. Adicionar Coluna (ADD COLUMN)</span>
+                    <span class="badge">Questão 1</span>
+                </div>
+                <div class="card-body">
+                    <div class="context-box">
+                        <strong>Contexto:</strong> Refatorar um schema significa mudar a estrutura para atender novos requisitos mantendo a consistência. O setor de vendas exigiu um novo controle. Escreva o comando SQL para adicionar uma coluna nova chamada <code>codigo_barras</code> do tipo <code>VARCHAR(50)</code> na tabela <code>produto</code>.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>2. Alterar Tipo/Tamanho (MODIFY COLUMN)</span>
+                    <span class="badge">Questão 2</span>
+                </div>
+                <div class="card-body">
+                    <div class="context-box">
+                        <strong>Contexto:</strong> O tamanho atual do nome dos produtos ficou pequeno. Uma boa prática é preferir ampliar limites antes de reduzir. Escreva o comando SQL para aumentar o tamanho permitido da coluna <code>nome</code> na tabela <code>produto</code> para <code>VARCHAR(150) NOT NULL</code>.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>3. Remover Coluna (DROP COLUMN)</span>
+                    <span class="badge badge-red">Questão 3</span>
+                </div>
+                <div class="card-body">
+                    <div class="context-box">
+                        <strong>Contexto:</strong> O sistema de código de barras físico será descontinuado. Escreva o comando para remover a coluna <code>codigo_barras</code> da tabela <code>produto</code>. <strong>Cuidado:</strong> essa operação resulta na perda de dado.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>4. Simulação de Mudança de Escopo (Desafio)</span>
+                    <span class="badge badge-red">Questão 4</span>
+                </div>
+                <div class="card-body">
+                    <div class="context-box">
+                        <strong>Contexto:</strong> Em um banco de dados que já possui registros, alterar tipos ou regras pode ser perigoso, pois pode falhar se existirem dados incompatíveis. Adicionar uma coluna <code>NOT NULL</code> exige valor para os dados existentes. Escreva um comando para adicionar uma coluna <code>status_ativo</code> na tabela <code>produto</code> utilizando <code>DEFAULT</code> para evitar erros de consistência.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="parte2" class="tab-content">
+            <h2 class="section-title">Parte 2: Ajustando Relacionamentos e Integridade</h2>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span>5. Adicionar Relacionamento (ADD CONSTRAINT)</span>
+                    <span class="badge">Questão 5</span>
+                </div>
+                <div class="card-body">
+                    <div class="context-box">
+                        <strong>Contexto:</strong> Em alguns casos, as chaves estrangeiras não são aplicadas na criação inicial. Precisamos adicionar a FK após as tabelas já existirem. Escreva o comando para adicionar a constraint <code>fk_func_depto</code> na tabela <code>funcionarios</code>, ligando <code>departamento_id</code> com a tabela <code>departamentos(id)</code> usando <code>ON DELETE RESTRICT</code>.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>6. Remover Relacionamento (DROP FOREIGN KEY)</span>
+                    <span class="badge">Questão 6</span>
+                </div>
+                <div class="card-body">
+                    <div class="context-box">
+                        <strong>Contexto:</strong> A arquitetura de dados mudou. Remova a FK da tabela <code>funcionarios</code>. Lembre-se do erro comum: se houver falha, pode ser o motivo de tentar dar DROP com um nome diferente do criado; se necessário, deve-se consultar o nome real no Workbench.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert-box" style="margin-top: 40px; text-align: center; border-left: none; border-top: 5px solid var(--senai-red);">
+            <strong>Lembrete Final: Entrega da Atividade</strong>
+            Certifique-se de que as 6 questões de refatoração foram resolvidas no seu arquivo <strong>.sql</strong>.
+        </div>
+
+    </div>
+
+    <footer>
+        <p>Senai &copy; 2026 - Caderno de Exercícios: Aula 03</p>
+    </footer>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>
